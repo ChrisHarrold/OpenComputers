@@ -36,15 +36,15 @@ local maxPowerRod = 100
 -- functions
 
 function setSections()
-  sections["graph"] = { x = 5, y = 3, width = 78, height= 33, title = "  INFOS  "}
-  sections["controls"] = { x = 88, y = 3, width = 40, height = 20, title = "  CONTROLS  "}
-  sections["info"] = { x = 88, y = 26, width = 40, height= 10, title = "  NUMBERS  "}
+  sections["graph"] = { x = 5, y = 3, width = 78, height= 33, title = "  Current Status  "}
+  sections["controls"] = { x = 88, y = 3, width = 40, height = 20, title = "  Reactor Controls  "}
+  sections["info"] = { x = 88, y = 26, width = 40, height= 10, title = "  Reactor Statistics  "}
 end
 
 function setGraphs()
-  graphs["tick"] = { x = 8, y = 6, width = 73, height= 8, title = "ENERGY LAST TICK"}
-  graphs["stored"] = { x = 8, y = 16, width = 73, height = 8, title = "ENERGY STORED"}
-  graphs["rods"] = { x = 8, y = 26, width = 73, height= 8, title = "CONTROL RODS LEVEL"}
+  graphs["tick"] = { x = 8, y = 6, width = 73, height= 8, title = "Power Output"}
+  graphs["stored"] = { x = 8, y = 16, width = 73, height = 8, title = "Stored Power"}
+  graphs["rods"] = { x = 8, y = 26, width = 73, height= 8, title = "Control Rod Level"}
 end
 
 function setInfos()
@@ -59,10 +59,10 @@ function setButtons()
   API.setTable("OFF", powerOff, 109, 5, 125, 7,"OFF", {on = colors.red, off = colors.red})
 
   API.setTable("lowerMinLimit", lowerMinLimit, 91, 15, 106, 17,"-10", {on = colors.blue, off = colors.blue})
-  API.setTable("lowerMaxLimit", lowerMaxLimit, 109, 15, 125, 17,"-10", {on = colors.purple, off = colors.purple})
+  --API.setTable("lowerMaxLimit", lowerMaxLimit, 109, 15, 125, 17,"-10", {on = colors.purple, off = colors.purple})
 
   API.setTable("augmentMinLimit", augmentMinLimit, 91, 19, 106, 21,"+10", {on = colors.blue, off = colors.blue})
-  API.setTable("augmentMaxLimit", augmentMaxLimit, 109, 19, 125, 21,"+10", {on = colors.purple, off = colors.purple})
+  --API.setTable("augmentMaxLimit", augmentMaxLimit, 109, 19, 125, 21,"+10", {on = colors.purple, off = colors.purple})
 end
 
 function printBorders(sectionName)
@@ -103,19 +103,19 @@ end
 
 function printStaticControlText()
   gpu.setForeground(colors.blue)
-  gpu.set(97,12, "MIN")
-  gpu.setForeground(colors.purple)
-  gpu.set(116,12, "MAX")
+  gpu.set(97,12, "Rod Depth")
+  --gpu.setForeground(colors.purple)
+  --gpu.set(116,12, "MAX")
   gpu.setForeground(colors.white)
-  gpu.set(102,10, "AUTO-CONTROL")
+  gpu.set(102,10, "Set Control Rods")
   gpu.set(107,13, "--")
 end
 
 function printControlInfos()
   gpu.setForeground(colors.blue)
   gpu.set(97,13, minPowerRod .. "% ")
-  gpu.setForeground(colors.purple)
-  gpu.set(116,13, maxPowerRod .. "% ")
+  --gpu.setForeground(colors.purple)
+  --gpu.set(116,13, maxPowerRod .. "% ")
   gpu.setForeground(colors.white)
 end
 
@@ -195,33 +195,33 @@ end
 
 -- Calculate and adjusts the level of the rods
 function adjustRodsLevel()
-	local rfTotalMax = 10000000
-  currentRf = reactor.stats["stored"]
+	--local rfTotalMax = 10000000
+  --currentRf = reactor.stats["stored"]
 
-	differenceMinMax = maxPowerRod - minPowerRod
+	--differenceMinMax = maxPowerRod - minPowerRod
 
-	local maxPower = (rfTotalMax/100) * maxPowerRod
-	local minPower = (rfTotalMax/100) * minPowerRod
+	--local maxPower = (rfTotalMax/100) * maxPowerRod
+	--local minPower = (rfTotalMax/100) * minPowerRod
 
-	if currentRf >= maxPower then
-		currentRf = maxPower
-	end
+	--if currentRf >= maxPower then
+	--	currentRf = maxPower
+	--end
 
-	if currentRf <= minPower then
-		currentRf = minPower
-	end
+	--if currentRf <= minPower then
+	--	currentRf = minPower
+	--end
 
-	currentRf = currentRf - (rfTotalMax/100) * minPowerRod
-	local rfInBetween = (rfTotalMax/100) * differenceMinMax
-	local rodLevel = math.ceil((currentRf/rfInBetween)*100)
+	--currentRf = currentRf - (rfTotalMax/100) * minPowerRod
+	--local rfInBetween = (rfTotalMax/100) * differenceMinMax
+	--local rodLevel = math.ceil((currentRf/rfInBetween)*100)
 
-	reactor.setAllControlRodLevels(rodLevel)
+	reactor.setAllControlRodLevels(minPowerRod)
 end
 
 function draw()
-  if maxRF < reactor.stats["tick"] then
-    maxRF = reactor.stats["tick"]
-  end
+  --if maxRF < reactor.stats["tick"] then
+    --maxRF = reactor.stats["tick"]
+  --end
 
   if currentRfTick ~= reactor.stats["tick"] then
     currentRfTick = reactor.stats["tick"]
@@ -257,14 +257,28 @@ function draw()
   printControlInfos()
 end
 
+function getmaxRF()
+	print("Starting Reactor Core v2.1.1 - please stand by.")
+	reactor.setAllControlRodLevels(0)
+	os.sleep(10)
+	maxRF = reactor.stats["tick"]
+	os.execute("clear")
+end
+
+
 function startup()
   getInfoFromFile()
+  if maxRF == 0 then
+  	getmaxRF()
+  end
   getInfoFromReactor()
   setSections()
   setGraphs()
   setInfos()
   setButtons()
+  
 
+  
   for name, data in pairs(sections) do
     printBorders(name)
   end
@@ -300,18 +314,21 @@ function getInfoFromFile()
 	    file:write("0")
 	    file:write("\n")
 	    file:write("100")
+	    file:write("\n")
+	    file:write(maxRF)
 	    file:close()
 	else
 		file = io.open("reactor.txt","r")
 		minPowerRod = tonumber(file:read("*l"))
 		maxPowerRod = tonumber(file:read("*l"))
+		maxRF = tonumber(file:read("*l"))
 	    file:close()
 	end
 end
 
 function setInfoToFile()
 	file = io.open("reactor.txt","w")
-	file:write(minPowerRod .. "\n" .. maxPowerRod)
+	file:write(minPowerRod .. "\n" .. maxPowerRod .. "\n" .. maxRF)
     file:flush()
     file:close()
 end
